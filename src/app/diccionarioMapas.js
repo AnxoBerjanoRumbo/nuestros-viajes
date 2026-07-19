@@ -1,0 +1,33 @@
+// Generado automáticamente por generarDiccionario.mjs — 2026-07-19T14:36:01.568Z
+// Fuente: codeforgermany/click_that_hood
+export const mapasProvincias = {
+  "Spain": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/spain-provinces.geojson",
+  "France": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/france-regions.geojson",
+  "Italy": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/italy-provinces.geojson",
+  "Germany": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/germany.geojson",
+  "Portugal": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/portugal.geojson",
+  "United Kingdom": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/united-kingdom.geojson",
+  "Ireland": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/ireland-counties.geojson",
+  "Switzerland": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/switzerland.geojson",
+  "Austria": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/austria-states.geojson",
+  "Greece": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/greece-regions.geojson",
+  "Turkey": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/turkey.geojson",
+  "Poland": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/poland.geojson",
+  "Romania": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/romania.geojson",
+  "Sweden": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/sweden-counties.geojson",
+  "Russia": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/russia.geojson",
+  "Japan": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/japan.geojson",
+  "China": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/china.geojson",
+  "India": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/india.geojson",
+  "Malaysia": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/malaysia.geojson",
+  "Pakistan": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/pakistan.geojson",
+  "Australia": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/australia.geojson",
+  "Canada": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/canada.geojson",
+  "Mexico": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/mexico.geojson",
+  "Brazil": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/brazil-states.geojson",
+  "Cuba": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/cuba.geojson",
+  "South Africa": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/south-africa.geojson",
+  "Hungary": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/hungary.geojson",
+  "Serbia": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/serbia.geojson",
+  "Iran": "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/iran-provinces.geojson"
+};

@@ -24,3 +24,153 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ===== Efecto Polaroid 3D ===== */
+.polaroid-container {
+  perspective: 1500px;
+  width: 100%;
+  height: 320px;
+  cursor: pointer;
+}
+
+.polaroid-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.polaroid-inner.volteada {
+  transform: rotateY(180deg);
+}
+
+.polaroid-cara {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+
+.polaroid-frente {
+  transform: rotateY(0deg);
+  /* Borde asimétrico estilo carrete: fino arriba/lados, grueso abajo */
+  padding: 10px 10px 32px 10px;
+}
+
+.polaroid-foto-wrap {
+  width: 100%;
+  flex: 1;
+  background: #eee;
+  overflow: hidden;
+}
+
+.polaroid-foto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.polaroid-foto-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: #bbb;
+}
+
+.polaroid-dorso {
+  transform: rotateY(180deg);
+  background: #fdf6ec;
+  padding: 24px;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+/* Animación de entrada escalonada para el álbum */
+@keyframes apareceRecuerdo {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.recuerdo-entrada {
+  animation: apareceRecuerdo 0.5s ease-out both;
+}
+
+@keyframes fade-in-down {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-down {
+  animation: fade-in-down 0.4s ease-out;
+}
+
+@keyframes zoomSaliendo {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.5); }
+}
+
+@keyframes zoomEntrando {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.mapa-saliendo {
+  animation: zoomSaliendo 0.35s ease-in forwards;
+}
+
+.mapa-entrando {
+  animation: zoomEntrando 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.spinner-carga {
+  border: 4px solid #e5e0d5;
+  border-top-color: #ff7f50;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  animation: girar 0.8s linear infinite;
+}
+
+@keyframes girar {
+  to { transform: rotate(360deg); }
+}
+
+.foto-ampliada-wrap {
+  perspective: 1800px;
+  width: min(420px, 80vw);
+  height: min(520px, 70vh);
+  transition: transform 0.15s ease-out;
+}
+
+.foto-ampliada-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1);
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+
+.foto-ampliada-inner.volteada {
+  transform: rotateY(180deg);
+}
+
+@keyframes modalIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-modal-in {
+  animation: modalIn 0.25s ease-out;
+}
