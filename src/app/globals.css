@@ -1,8 +1,27 @@
 @import "tailwindcss";
 
+/* ============================================================
+   PALETA — "cielo de atardecer": tonos apagados, no saturados.
+   Un único gradiente ("aurora") como firma visual, usado con
+   moderación (splash de entrada, algún acento puntual) — el
+   resto de la interfaz se queda tranquila y neutra.
+   ============================================================ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-paper: #fbf7f3;       /* fondo principal */
+  --color-paper-alt: #f3ece6;   /* paneles / mapas */
+  --color-ink: #2b2230;         /* texto principal */
+  --color-ink-soft: #7a6d78;    /* texto secundario */
+  --color-line: #e6dcd4;        /* bordes finos */
+
+  --color-rose: #c2416b;        /* rojo/rosa — acción principal */
+  --color-blush: #e8a0c4;       /* rosa suave */
+  --color-twilight: #565a9e;    /* azul */
+  --color-plum: #7b4b8e;        /* morado */
+
+  --aurora: linear-gradient(135deg, #c2416b 0%, #7b4b8e 55%, #565a9e 100%);
+
+  --background: var(--color-paper);
+  --foreground: var(--color-ink);
 }
 
 @theme inline {
@@ -12,17 +31,74 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-optical-sizing: auto;
+}
+
+.font-caveat {
+  font-family: var(--font-caveat), cursive;
+}
+
+/* ===== Botones ===== */
+.btn-primario {
+  background: var(--aurora);
+  color: white;
+  border-radius: 9999px;
+  font-weight: 600;
+  box-shadow: 0 6px 16px -6px rgba(124, 42, 92, 0.45);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.btn-primario:active {
+  transform: scale(0.97);
+}
+.btn-primario:disabled {
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+.btn-fantasma {
+  background: white;
+  color: var(--color-ink);
+  border: 1px solid var(--color-line);
+  border-radius: 9999px;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.btn-fantasma:hover {
+  border-color: var(--color-rose);
+  color: var(--color-rose);
+}
+
+/* ===== Campos de formulario "sin forzar": línea inferior, sin caja ===== */
+.campo-sutil {
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--color-line);
+  border-radius: 0;
+  padding: 0.5rem 0.1rem;
+  color: var(--color-ink);
+  transition: border-color 0.2s ease;
+}
+.campo-sutil:focus {
+  outline: none;
+  border-bottom-color: var(--color-rose);
+}
+.campo-sutil::placeholder {
+  color: var(--color-ink-soft);
+  opacity: 0.6;
+}
+
+.tarjeta {
+  background: white;
+  border-radius: 1.25rem;
+  border: 1px solid var(--color-line);
+  box-shadow: 0 2px 14px -6px rgba(43, 34, 48, 0.12);
 }
 
 /* ===== Efecto Polaroid 3D ===== */
@@ -58,7 +134,6 @@ body {
 
 .polaroid-frente {
   transform: rotateY(0deg);
-  /* Borde asimétrico estilo carrete: fino arriba/lados, grueso abajo */
   padding: 10px 10px 32px 10px;
 }
 
@@ -96,12 +171,11 @@ body {
   gap: 10px;
 }
 
-/* Animación de entrada escalonada para el álbum */
+/* ===== Animaciones de entrada / transición ===== */
 @keyframes apareceRecuerdo {
   from { opacity: 0; transform: translateY(16px) scale(0.96); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
-
 .recuerdo-entrada {
   animation: apareceRecuerdo 0.5s ease-out both;
 }
@@ -110,7 +184,6 @@ body {
   from { opacity: 0; transform: translateY(-12px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
 .animate-fade-in-down {
   animation: fade-in-down 0.4s ease-out;
 }
@@ -119,29 +192,25 @@ body {
   from { opacity: 1; transform: scale(1); }
   to { opacity: 0; transform: scale(1.5); }
 }
-
 @keyframes zoomEntrando {
   from { opacity: 0; transform: scale(0.8); }
   to { opacity: 1; transform: scale(1); }
 }
-
 .mapa-saliendo {
   animation: zoomSaliendo 0.35s ease-in forwards;
 }
-
 .mapa-entrando {
   animation: zoomEntrando 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .spinner-carga {
-  border: 4px solid #e5e0d5;
-  border-top-color: #ff7f50;
+  border: 4px solid var(--color-line);
+  border-top-color: var(--color-rose);
   border-radius: 50%;
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   animation: girar 0.8s linear infinite;
 }
-
 @keyframes girar {
   to { transform: rotate(360deg); }
 }
@@ -152,7 +221,6 @@ body {
   height: min(520px, 70vh);
   transition: transform 0.15s ease-out;
 }
-
 .foto-ampliada-inner {
   position: relative;
   width: 100%;
@@ -161,7 +229,6 @@ body {
   transform-style: preserve-3d;
   cursor: pointer;
 }
-
 .foto-ampliada-inner.volteada {
   transform: rotateY(180deg);
 }
@@ -170,7 +237,642 @@ body {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-
 .animate-modal-in {
   animation: modalIn 0.25s ease-out;
+}
+
+/* ===== Splash de entrada: icono dibujado a trazo + título ===== */
+.splash-overlay {
+  animation: splashFadeOut 0.5s ease forwards;
+  animation-delay: 2.6s;
+}
+@keyframes splashFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.splash-icono path {
+  fill: none;
+  stroke: white;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+  animation: dibujarTrazo 1s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+.splash-icono path:nth-child(2) {
+  animation-delay: 0.75s;
+  animation-duration: 0.35s;
+}
+@keyframes dibujarTrazo {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes splashTextoEntra {
+  0% { opacity: 0; transform: translateY(10px); letter-spacing: 0.25em; }
+  100% { opacity: 1; transform: translateY(0); letter-spacing: 0.03em; }
+}
+.splash-texto-v2 {
+  opacity: 0;
+  animation: splashTextoEntra 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation-delay: 1.1s;
+}
+
+@keyframes splashLineaEntra {
+  from { transform: scaleX(0); opacity: 0; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+.splash-linea {
+  transform-origin: center;
+  animation: splashLineaEntra 0.6s ease forwards;
+  animation-delay: 1.7s;
+  opacity: 0;
+}
+
+/* ============================================================
+   MURO DE POLAROIDS (álbum de recuerdos)
+   ============================================================ */
+.muro-fotos {
+  columns: 2;
+  column-gap: 1.75rem;
+}
+@media (min-width: 640px) {
+  .muro-fotos { columns: 3; }
+}
+@media (min-width: 1024px) {
+  .muro-fotos { columns: 4; }
+}
+
+.polaroid-pieza {
+  break-inside: avoid;
+  margin-bottom: 1.75rem;
+  display: block;
+  width: 100%;
+}
+
+.polaroid-foto-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  background: white;
+  padding: 10px 10px 34px 10px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 10px 24px -10px rgba(43, 34, 48, 0.32), 0 2px 6px rgba(43, 34, 48, 0.12);
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.3, 1.15), box-shadow 0.28s ease;
+}
+.polaroid-foto-card:hover,
+.polaroid-foto-card:focus-visible {
+  transform: scale(1.07) translateY(-6px) rotate(0deg) !important;
+  box-shadow: 0 24px 44px -12px rgba(43, 34, 48, 0.38), 0 6px 14px rgba(43, 34, 48, 0.16);
+  z-index: 30;
+  outline: none;
+}
+.polaroid-foto-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  background: var(--color-paper-alt);
+}
+
+.polaroid-caption {
+  position: absolute;
+  bottom: 2px;
+  left: 6px;
+  right: 6px;
+  text-align: center;
+  font-family: var(--font-caveat), cursive;
+  color: #4a4048;
+  font-size: 1.05rem;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nota-suelta {
+  background: #fdf8ee;
+  padding: 22px 20px;
+  box-shadow: 0 10px 22px -8px rgba(43, 34, 48, 0.25);
+  font-family: var(--font-caveat), cursive;
+  font-size: 1.35rem;
+  line-height: 1.3;
+  color: var(--color-ink);
+  text-align: center;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.nota-suelta:hover {
+  transform: scale(1.03);
+  box-shadow: 0 16px 30px -10px rgba(43, 34, 48, 0.3);
+}
+
+/* ===== Entrada 3D al abrir una foto ===== */
+.entrada-3d-wrap {
+  perspective: 1400px;
+}
+@keyframes fotoEntrada3D {
+  from { opacity: 0; transform: scale(0.55) rotateY(-22deg) rotateX(6deg); }
+  to { opacity: 1; transform: scale(1) rotateY(0deg) rotateX(0deg); }
+}
+.foto-entrada-3d {
+  animation: fotoEntrada3D 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  transform-style: preserve-3d;
+}
+
+/* ============================================================
+   ÁLBUM — un único fondo crema con puntitos, pantalla completa
+   ============================================================ */
+.fondo-album {
+  background-color: #f7f1e3;
+  background-image: radial-gradient(rgba(43, 34, 48, 0.09) 1.5px, transparent 1.5px);
+  background-size: 20px 20px;
+}
+
+.muro-fotos {
+  columns: 2;
+  column-gap: 1.5rem;
+}
+@media (min-width: 640px) { .muro-fotos { columns: 3; } }
+@media (min-width: 1024px) { .muro-fotos { columns: 4; } }
+
+.polaroid-pieza {
+  break-inside: avoid;
+  margin-bottom: 2rem;
+  display: block;
+  width: 100%;
+  position: relative;
+}
+
+.polaroid-cinta {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 64px;
+  height: 26px;
+  transform: translateX(-50%) rotate(-3deg);
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,0.55), rgba(255,255,255,0.55) 4px, rgba(216,196,150,0.65) 4px, rgba(216,196,150,0.65) 8px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  z-index: 5;
+  pointer-events: none;
+  border-radius: 1px;
+}
+
+.polaroid-foto-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  background: #fffdf9;
+  padding: 10px 10px 10px 10px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 12px 26px -10px rgba(30, 22, 14, 0.32), 0 3px 8px rgba(30, 22, 14, 0.14);
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.3, 1.2), box-shadow 0.3s ease;
+}
+.polaroid-foto-card:hover,
+.polaroid-foto-card:focus-visible {
+  transform: scale(1.08) translateY(-8px) rotate(0deg) !important;
+  box-shadow: 0 28px 50px -14px rgba(30, 22, 14, 0.4), 0 8px 16px rgba(30, 22, 14, 0.18);
+  z-index: 30;
+  outline: none;
+}
+.polaroid-foto-card:active { transform: scale(1.03) rotate(0deg) !important; }
+.polaroid-foto-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  background: var(--color-paper-alt);
+}
+
+/* Frase decorativa: texto elegante suelto, sin caja, integrado en
+   el fondo — NO es la leyenda de ninguna foto, es decoración del
+   collage, igual que las fotos son otra pieza más del mismo. */
+.frase-decorativa {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 1.3rem;
+  line-height: 1.4;
+  color: var(--color-plum);
+  text-align: center;
+  padding: 0.75rem 1rem;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+}
+
+/* ===== Cabecera flotante (círculos, no una barra de color) ===== */
+.album-cabecera-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: white;
+  color: var(--color-ink-soft);
+  box-shadow: 0 2px 8px rgba(43,34,48,0.18);
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+.album-cabecera-btn:active { transform: scale(0.9); }
+
+/* ===== Entrada 3D al abrir una foto ===== */
+.entrada-3d-wrap { perspective: 1400px; }
+@keyframes fotoEntrada3D {
+  0% { opacity: 0; transform: scale(0.5) rotateY(-28deg) rotateX(8deg); }
+  60% { opacity: 1; transform: scale(1.04) rotateY(4deg) rotateX(-1deg); }
+  100% { opacity: 1; transform: scale(1) rotateY(0deg) rotateX(0deg); }
+}
+.foto-entrada-3d {
+  animation: fotoEntrada3D 0.55s cubic-bezier(0.2, 0.85, 0.25, 1) both;
+  transform-style: preserve-3d;
+}
+
+/* ===== Marco de la foto ampliada: sin recorte, con borde tipo paspartú ===== */
+.foto-marco {
+  background: #fffdf9;
+  padding: 14px;
+  box-shadow: 0 20px 45px rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.foto-marco img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* ===== Botón "guardar" del dorso, integrado como icono discreto ===== */
+.btn-guardar-dorso {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.65);
+  color: #6b5d4f;
+  backdrop-filter: blur(2px);
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+.btn-guardar-dorso:hover { background: rgba(255,255,255,0.9); color: #2b2230; }
+.btn-guardar-dorso:active { transform: scale(0.88); }
+.btn-guardar-dorso.guardado {
+  background: #4caf50;
+  color: white;
+  animation: pulseGuardado 0.4s ease;
+}
+@keyframes pulseGuardado {
+  0% { transform: scale(0.8); }
+  60% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+/* ===== Zona de selección de fotos (dropzone) ===== */
+.dropzone-fotos {
+  border: 2px dashed var(--color-line);
+  border-radius: 1rem;
+  padding: 1.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  background: rgba(255,255,255,0.5);
+}
+.dropzone-fotos:hover { border-color: var(--color-rose); background: white; }
+
+@media (hover: none) {
+  .acciones-tactiles { opacity: 0.92 !important; }
+}
+
+/* ============================================================
+   NUEVO SPLASH ÉPICO (Avión volador + Estela)
+   ============================================================ */
+
+/* Vuelo orgánico del avión de papel */
+@keyframes vueloAvion {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(0.6);
+  }
+  20% {
+    transform: translate(60px, -40px) rotate(15deg) scale(0.8);
+  }
+  45% {
+    transform: translate(-50px, -90px) rotate(-20deg) scale(0.9);
+  }
+  70% {
+    transform: translate(40px, -140px) rotate(25deg) scale(1.1);
+  }
+  85% {
+    transform: translate(-10px, -180px) rotate(-10deg) scale(1.4);
+  }
+  100% {
+    transform: translate(0, -260px) rotate(0deg) scale(2.2);
+    opacity: 0;
+  }
+}
+
+.anim-avion-vuelo {
+  animation: vueloAvion 2.4s cubic-bezier(0.42, 0, 0.58, 1) forwards;
+  transform-origin: center center;
+}
+
+/* Dibujo progresivo de la ruta/estela */
+@keyframes dibujarRuta {
+  from {
+    stroke-dashoffset: 400;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.anim-estela-ruta {
+  stroke-dasharray: 6 6;
+  stroke-dashoffset: 400;
+  animation: dibujarRuta 2s ease-out forwards;
+}
+
+/* Revelado suave con desenfoque para el texto */
+@keyframes revelarTextoEpico {
+  0% {
+    opacity: 0;
+    filter: blur(12px);
+    transform: translateY(20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0 border-box);
+    transform: translateY(0) scale(1);
+  }
+}
+
+.texto-epico-reveal {
+  animation: revelarTextoEpico 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.6s;
+  opacity: 0;
+}
+
+/* Destello sutil de fondo */
+@keyframes pulsoGlow {
+  0%, 100% { opacity: 0.3; transform: scale(0.9); }
+  50% { opacity: 0.7; transform: scale(1.1); }
+}
+
+.glow-fondo-splash {
+  animation: pulsoGlow 2.5s ease-in-out infinite;
+}
+
+/* ============================================================
+   ÁLBUM EN COLLAGE & MARCOS POLAROID AUTÉNTICOS
+   ============================================================ */
+
+/* Patrón de frases integradas en el fondo como marca de agua */
+.fondo-frases-patron {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3rem 4rem;
+  padding: 2rem;
+  opacity: 0.15;
+  transform: rotate(-12deg) scale(1.2);
+  user-select: none;
+}
+
+.frase-marca-agua {
+  font-family: var(--font-caveat), cursive;
+  font-size: 1.4rem;
+  color: var(--color-plum);
+  white-space: nowrap;
+}
+
+/* Tarjeta Polaroid Clásica */
+.polaroid-autentica {
+  position: relative;
+  background: #ffffff;
+  padding: 12px 12px 42px 12px; /* Margen inferior ancho tipo Polaroid */
+  box-shadow: 0 10px 25px -5px rgba(43, 34, 48, 0.25), 0 4px 10px rgba(0, 0, 0, 0.08);
+  border-radius: 2px;
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.polaroid-autentica:hover,
+.polaroid-autentica:active {
+  transform: scale(1.05) translateY(-4px) rotate(0deg) !important;
+  box-shadow: 0 20px 35px -8px rgba(43, 34, 48, 0.35);
+  z-index: 20;
+}
+
+.polaroid-autentica img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: #f3ece6;
+  border-radius: 1px;
+}
+
+/* Visor ampliado sin bordes extraños */
+.visor-foto-limpia {
+  max-width: 90vw;
+  max-height: 65vh;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================================
+   ESTILOS ÁLBUM POLAROID (4 FOTOS + FONDO ILUSTRADO)
+   ============================================================ */
+
+/* Frases disimuladas en el fondo estilo acuarela */
+.fondo-frases-organico {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.frase-manuscrita-fondo {
+  position: absolute;
+  font-family: var(--font-caveat), cursive;
+  font-size: 1.35rem;
+  color: var(--color-plum);
+  opacity: 0.18;
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* Tarjeta Polaroid del álbum cuadrícula */
+.polaroid-cuadricula-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 170px;
+  background: #ffffff;
+  padding: 8px 8px 28px 8px; /* Borde inferior grueso tipo Polaroid */
+  box-shadow: 0 8px 18px -4px rgba(43, 34, 48, 0.22);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease;
+}
+
+.polaroid-cuadricula-card:hover,
+.polaroid-cuadricula-card:active {
+  transform: scale(1.08) translateY(-4px) rotate(0deg) !important;
+  box-shadow: 0 16px 28px -6px rgba(43, 34, 48, 0.32);
+  z-index: 25;
+}
+
+.polaroid-cuadricula-card img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+  border-radius: 1px;
+  background: #f3ece6;
+}
+
+/* Animación de cambio de página */
+.hoja-album-wrap {
+  width: 100%;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.hoja-album-wrap.pasando-pagina {
+  opacity: 0;
+  transform: scale(0.96) rotateY(-8deg);
+}
+
+/* Flecha elegante de pasar página */
+.album-flecha-pag {
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 9999px;
+  background: white;
+  color: var(--color-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 12px rgba(43, 34, 48, 0.15);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.album-flecha-pag:active {
+  transform: scale(0.9);
+}
+
+.album-flecha-pag:disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* ============================================================
+   ESTILOS MEJORADOS PARA ÁLBUM Y VISOR MÓVIL
+   ============================================================ */
+
+/* Fondo de frases repetidas limpiamente por toda la pantalla */
+.fondo-frases-mosaico {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 2.5rem 1.5rem;
+  padding: 1.5rem;
+  opacity: 0.35; /* Mayor visibilidad para que se lean bien */
+  user-select: none;
+}
+
+.frase-mosaico-item {
+  font-family: var(--font-caveat), cursive;
+  font-size: 1.25rem;
+  color: var(--color-plum);
+  text-align: center;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+/* Transición de hoja de álbum (Pasar de página) */
+.hoja-album-animada {
+  width: 100%;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
+}
+
+.hoja-album-animada.deslizando-izq {
+  opacity: 0;
+  transform: translateX(-100%) rotate(-4deg);
+}
+
+.hoja-album-animada.deslizando-der {
+  opacity: 0;
+  transform: translateX(100%) rotate(4deg);
+}
+
+/* Tarjeta Polaroid en el álbum */
+.polaroid-album-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 150px;
+  background: #ffffff;
+  padding: 6px 6px 26px 6px;
+  box-shadow: 0 10px 22px -6px rgba(43, 34, 48, 0.26);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.28s ease;
+}
+
+.polaroid-album-card:active {
+  transform: scale(1.08) translateY(-6px) rotate(0deg) !important;
+  box-shadow: 0 18px 32px -8px rgba(43, 34, 48, 0.38);
+  z-index: 20;
+}
+
+.polaroid-album-card img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+  border-radius: 1px;
+  background: #f3ece6;
+}
+
+/* Flechas de navegación del álbum */
+.btn-flecha-album {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  background: white;
+  color: var(--color-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(43, 34, 48, 0.18);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-flecha-album:active {
+  transform: scale(0.9);
+}
+
+.btn-flecha-album:disabled {
+  opacity: 0.3;
+  pointer-events: none;
 }
