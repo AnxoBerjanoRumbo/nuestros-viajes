@@ -20,30 +20,48 @@ export default function FormularioRecuerdo({ provincia, recuerdoExistente, onGua
         : [""]
   );
 
-  // Manejador para subida de fotos
-  const handleSubirFotos = (e) => {
+  // Manejador para subida de fotos a Cloudinary
+  const handleSubirFotos = async (e) => {
     const archivos = Array.from(e.target.files || []);
     if (!archivos.length) return;
 
-    archivos.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const nuevaFoto = {
-          id: Date.now() + Math.random(),
-          src: event.target.result,
-          notaDorso: "",
-        };
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
-        setFotos((prev) => {
-          const listaActualizada = [...prev, nuevaFoto];
-          if (!portadaId) {
-            setPortadaId(nuevaFoto.id);
+    for (const file of archivos) {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", uploadPreset);
+
+      try {
+        const respuesta = await fetch(
+          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+          {
+            method: "POST",
+            body: formData,
           }
-          return listaActualizada;
-        });
-      };
-      reader.readAsDataURL(file);
-    });
+        );
+        const data = await respuesta.json();
+
+        if (data.secure_url) {
+          const nuevaFoto = {
+            id: Date.now() + Math.random(),
+            src: data.secure_url,
+            notaDorso: "",
+          };
+
+          setFotos((prev) => {
+            const listaActualizada = [...prev, nuevaFoto];
+            if (!portadaId) {
+              setPortadaId(nuevaFoto.id);
+            }
+            return listaActualizada;
+          });
+        }
+      } catch (error) {
+        console.error("Error al subir la foto a Cloudinary:", error);
+      }
+    }
   };
 
   const eliminarFoto = (id) => {
