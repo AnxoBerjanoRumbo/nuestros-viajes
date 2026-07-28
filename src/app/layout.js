@@ -24,9 +24,23 @@ const caveat = Caveat({
   weight: ["500", "600", "700"],
 });
 
+export const viewport = {
+  themeColor: "#c2416b",
+};
+
 export const metadata = {
   title: "Nuestros Viajes",
   description: "Mapa interactivo de recuerdos de viaje",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Nuestros Viajes",
+  },
+  icons: {
+    icon: "/icon.jpg",
+    apple: "/apple-touch-icon.jpg",
+  },
 };
 
 export default function RootLayout({ children }) {

@@ -1,0 +1,22 @@
+{
+  "name": "Nuestros Viajes",
+  "short_name": "NuestrosViajes",
+  "description": "Mapa interactivo de recuerdos de viaje",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f5f0",
+  "theme_color": "#c2416b",
+  "icons": [
+    {
+      "src": "/icon.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
