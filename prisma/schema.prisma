@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model RecuerdoViaje {
@@ -19,11 +20,11 @@ model RecuerdoViaje {
 }
 
 model MarcadorMapa {
-  id           String   @id @default(uuid())
-  coordinates  Json     
-  color        String
-  size         Int
-  etiqueta     String?
-  nivelOrigen  String
-  pais         String
+  id          String   @id @default(uuid())
+  coordinates Json     
+  color       String
+  size        Int
+  etiqueta    String?
+  nivelOrigen String
+  pais        String
 }
