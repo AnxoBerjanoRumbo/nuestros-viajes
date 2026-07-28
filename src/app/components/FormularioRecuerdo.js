@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export default function FormularioRecuerdo({ provincia, recuerdoExistente, onGuardar, onCancelar }) {
+export default function FormularioRecuerdo({ provincia, pais, recuerdoExistente, onGuardar, onCancelar }) {
   const [titulo, setTitulo] = useState(recuerdoExistente?.titulo || "");
   const [ubicacion, setUbicacion] = useState(recuerdoExistente?.ubicacion || provincia || "");
   const [fecha, setFecha] = useState(recuerdoExistente?.fecha || new Date().toISOString().split("T")[0]);
@@ -109,19 +109,20 @@ export default function FormularioRecuerdo({ provincia, recuerdoExistente, onGua
     });
 
     const datosParaGuardar = {
+      id: recuerdoExistente?.id,
       titulo: titulo.trim(),
       ubicacion: ubicacion.trim(),
-      provincia: provincia || "Sin provincia",
-      pais: "España",
+      provincia: provincia || recuerdoExistente?.provincia || "Sin provincia",
+      pais: pais || recuerdoExistente?.pais || "España",
       fecha,
       fotos: fotosOrdenadas,
       frases: frasesFiltradas,
     };
 
     try {
-      // 1. Guardar en PostgreSQL
+      const esEdicion = !!recuerdoExistente?.id;
       const respuesta = await fetch("/api/recuerdos", {
-        method: "POST",
+        method: esEdicion ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(datosParaGuardar),
       });
@@ -133,7 +134,6 @@ export default function FormularioRecuerdo({ provincia, recuerdoExistente, onGua
       const datosGuardados = await respuesta.json();
       alert("¡Viaje guardado correctamente en la base de datos!");
 
-      // 2. Notificar al componente padre
       if (onGuardar) {
         onGuardar(datosGuardados);
       }

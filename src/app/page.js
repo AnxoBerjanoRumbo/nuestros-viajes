@@ -75,7 +75,7 @@ function SplashEntrada({ visible }) {
 
       return {
         x: 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * u + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * u2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * u3),
-        y: 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * u + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * u2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * u3)
+        y: 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * u + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * u2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * u3)
       };
     }
 
@@ -117,8 +117,9 @@ function SplashEntrada({ visible }) {
 
       if (easeProgress > 0 && easeProgress <= 1) {
         const currP = obtenerPuntoFluido(easeProgress);
-        const prevP = obtenerPuntoFluido(Math.max(0, easeProgress - 0.004));
-        const angle = Math.atan2(currP.y - prevP.y, currP.x - prevP.x);
+        const prevP = obtenerPuntoFluido(Math.max(0, easeProgress - 0.005));
+        const nextP = obtenerPuntoFluido(Math.min(1, easeProgress + 0.005));
+        const angle = Math.atan2(nextP.y - prevP.y, nextP.x - prevP.x);
 
         ctx.save();
         ctx.translate(currP.x, currP.y);
@@ -390,20 +391,35 @@ export default function Home() {
     setEtiquetaMarcador(m.etiqueta || "");
   };
 
-  const guardarMarcadorEditado = () => {
+  const guardarMarcadorEditado = async () => {
     if (!marcadorEnEdicion) return;
-    setMarcadores((prev) =>
-      prev.map((m) =>
-        m.id === marcadorEnEdicion.id
-          ? { ...m, color: colorSeleccionado, size: tamanoSeleccionado, etiqueta: etiquetaMarcador.trim() }
-          : m
-      )
-    );
+    try {
+      await fetch("/api/recuerdos", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          marcador: {
+            id: marcadorEnEdicion.id,
+            color: colorSeleccionado,
+            size: tamanoSeleccionado,
+            etiqueta: etiquetaMarcador.trim(),
+          },
+        }),
+      });
+      await cargarDatosDesdeBD();
+    } catch (e) {
+      console.error("Error al guardar marcador editado:", e);
+    }
     setMarcadorEnEdicion(null);
   };
 
-  const eliminarMarcador = (id) => {
-    setMarcadores((prev) => prev.filter((m) => m.id !== id));
+  const eliminarMarcador = async (id) => {
+    try {
+      await fetch(`/api/recuerdos?id=${id}&tipo=marcador`, { method: "DELETE" });
+      await cargarDatosDesdeBD();
+    } catch (e) {
+      console.error("Error al eliminar marcador:", e);
+    }
     setMarcadorEnEdicion(null);
   };
 
@@ -429,19 +445,14 @@ export default function Home() {
     setCreandoNuevo(true);
   };
 
-  const eliminarViaje = (id) => {
+  const eliminarViaje = async (id) => {
     if (!confirm("¿Seguro que quieres eliminar este recuerdo? No se puede deshacer.")) return;
-    setViajesGuardados((prev) => {
-      const paisData = prev[paisActual] || {};
-      const provData = (paisData[provinciaActual] || []).filter((v) => v.id !== id);
-      return {
-        ...prev,
-        [paisActual]: {
-          ...paisData,
-          [provinciaActual]: provData,
-        },
-      };
-    });
+    try {
+      await fetch(`/api/recuerdos?id=${id}&tipo=recuerdo`, { method: "DELETE" });
+      await cargarDatosDesdeBD();
+    } catch (e) {
+      console.error("Error al eliminar el recuerdo:", e);
+    }
   };
 
   const actualizarNotaFoto = (recuerdoId, fotoId, notaDorso) => {
@@ -757,6 +768,7 @@ export default function Home() {
             ) : (
               <FormularioRecuerdo
                 provincia={provinciaActual}
+                pais={paisActual}
                 recuerdoExistente={viajeEnEdicion}
                 onGuardar={guardarViaje}
                 onCancelar={() => {
