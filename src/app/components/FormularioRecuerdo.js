@@ -91,7 +91,8 @@ export default function FormularioRecuerdo({ provincia, recuerdoExistente, onGua
     setFrases(frases.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e) => {
+  // ENVÍO DE DATOS A LA BASE DE DATOS
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!titulo.trim()) {
       alert("Por favor, introduce un título para el recuerdo.");
@@ -107,14 +108,39 @@ export default function FormularioRecuerdo({ provincia, recuerdoExistente, onGua
       return 0;
     });
 
-    onGuardar({
+    const datosParaGuardar = {
       titulo: titulo.trim(),
       ubicacion: ubicacion.trim(),
+      provincia: provincia || "Sin provincia",
+      pais: "España",
       fecha,
       fotos: fotosOrdenadas,
-      portadaId,
       frases: frasesFiltradas,
-    });
+    };
+
+    try {
+      // 1. Guardar en PostgreSQL
+      const respuesta = await fetch("/api/recuerdos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(datosParaGuardar),
+      });
+
+      if (!respuesta.ok) {
+        throw new Error("Error al guardar en la base de datos");
+      }
+
+      const datosGuardados = await respuesta.json();
+      alert("¡Viaje guardado correctamente en la base de datos!");
+
+      // 2. Notificar al componente padre
+      if (onGuardar) {
+        onGuardar(datosGuardados);
+      }
+    } catch (error) {
+      console.error("Error al guardar el recuerdo:", error);
+      alert("Hubo un error al guardar el viaje en la base de datos.");
+    }
   };
 
   return (

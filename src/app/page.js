@@ -10,8 +10,6 @@ import AlbumModal from "./components/AlbumModal";
 import FormularioRecuerdo from "./components/FormularioRecuerdo";
 
 const mapaMundo = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
-const CLAVE_STORAGE = "mapa-viajes-recuerdos";
-const CLAVE_MARCADORES = "mapa-viajes-marcadores";
 const ANCHO_MAPA = 800;
 const ALTO_MAPA = 500;
 
@@ -77,7 +75,7 @@ function SplashEntrada({ visible }) {
 
       return {
         x: 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * u + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * u2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * u3),
-        y: 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * u + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * u2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * u3)
+        y: 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * u + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * u2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * u3)
       };
     }
 
@@ -200,7 +198,6 @@ export default function Home() {
   const [provinciaResaltada, setProvinciaResaltada] = useState(null);
 
   const [viajesGuardados, setViajesGuardados] = useState({});
-  const [datosCargados, setDatosCargados] = useState(false);
   const [creandoNuevo, setCreandoNuevo] = useState(false);
   const [viajeEnEdicion, setViajeEnEdicion] = useState(null);
 
@@ -244,36 +241,32 @@ export default function Home() {
     }
   }, [geoPais, paisActual]);
 
-  useEffect(() => {
+  // Cargar datos de la API Route (PostgreSQL) al inicio
+  const cargarDatosDesdeBD = async () => {
     try {
-      const guardado = localStorage.getItem(CLAVE_STORAGE);
-      if (guardado) setViajesGuardados(JSON.parse(guardado));
+      const res = await fetch("/api/recuerdos");
+      if (!res.ok) return;
+      const data = await res.json();
 
-      const marcadoresGuardados = localStorage.getItem(CLAVE_MARCADORES);
-      if (marcadoresGuardados) setMarcadores(JSON.parse(marcadoresGuardados));
+      const mapaViajes = {};
+      (data.recuerdos || []).forEach((r) => {
+        const pais = r.pais || "España";
+        const prov = r.provincia || "Sin provincia";
+        if (!mapaViajes[pais]) mapaViajes[pais] = {};
+        if (!mapaViajes[pais][prov]) mapaViajes[pais][prov] = [];
+        mapaViajes[pais][prov].push(r);
+      });
+
+      setViajesGuardados(mapaViajes);
+      setMarcadores(data.marcadores || []);
     } catch (e) {
-      console.error("Error leyendo localStorage:", e);
+      console.error("Error al obtener datos de la BD:", e);
     }
-    setDatosCargados(true);
+  };
+
+  useEffect(() => {
+    cargarDatosDesdeBD();
   }, []);
-
-  useEffect(() => {
-    if (!datosCargados) return;
-    try {
-      localStorage.setItem(CLAVE_STORAGE, JSON.stringify(viajesGuardados));
-    } catch (e) {
-      console.error("Error guardando en localStorage:", e);
-    }
-  }, [viajesGuardados, datosCargados]);
-
-  useEffect(() => {
-    if (!datosCargados) return;
-    try {
-      localStorage.setItem(CLAVE_MARCADORES, JSON.stringify(marcadores));
-    } catch (e) {
-      console.error("Error guardando marcadores:", e);
-    }
-  }, [marcadores, datosCargados]);
 
   const irANivel = (nuevoNivel, cambios = {}) => {
     setTransicion("saliendo");
@@ -354,7 +347,6 @@ export default function Home() {
         geo.properties.NAME_1 ||
         "Provincia";
       
-      // Muestra la provincia marcada en pantalla claramente antes de cambiar de nivel
       setProvinciaResaltada(geo.rsmKey);
       setTimeout(() => {
         irANivel("provincia", { provincia: nombreProv });
@@ -363,10 +355,9 @@ export default function Home() {
     }
   };
 
-  const guardarMarcadorNuevo = () => {
+  const guardarMarcadorNuevo = async () => {
     if (!marcadorPendiente) return;
     const nuevo = {
-      id: Date.now(),
       coordinates: marcadorPendiente,
       color: colorSeleccionado,
       size: tamanoSeleccionado,
@@ -374,7 +365,18 @@ export default function Home() {
       nivelOrigen: nivel,
       pais: paisActual || "Mundo",
     };
-    setMarcadores((prev) => [...prev, nuevo]);
+
+    try {
+      await fetch("/api/recuerdos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ marcador: nuevo }),
+      });
+      await cargarDatosDesdeBD();
+    } catch (e) {
+      console.error("Error al guardar marcador:", e);
+    }
+
     setMarcadorPendiente(null);
     setEtiquetaMarcador("");
     setModoCrearMarcador(false);
@@ -415,25 +417,9 @@ export default function Home() {
     [marcadores, paisActual]
   );
 
-  const guardarViaje = (datosFormulario) => {
-    setViajesGuardados((prev) => {
-      const paisData = prev[paisActual] || {};
-      const provData = paisData[provinciaActual] || [];
-
-      const nuevaLista = viajeEnEdicion
-        ? provData.map((v) =>
-            v.id === viajeEnEdicion.id ? { ...datosFormulario, id: viajeEnEdicion.id } : v
-          )
-        : [...provData, { ...datosFormulario, id: Date.now() }];
-
-      return {
-        ...prev,
-        [paisActual]: {
-          ...paisData,
-          [provinciaActual]: nuevaLista,
-        },
-      };
-    });
+  // Tras guardar un recuerdo desde el formulario, recargamos la BD
+  const guardarViaje = async () => {
+    await cargarDatosDesdeBD();
     setCreandoNuevo(false);
     setViajeEnEdicion(null);
   };
@@ -632,7 +618,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* MAPA PAÍS (ESPAÑA / CORUÑA / PROVINCIAS) */}
+        {/* MAPA PAÍS */}
         {nivel === "pais" && (
           <div
             className={`relative w-full flex-1 min-h-0 bg-[#ede4dc] rounded-3xl shadow-sm overflow-hidden border border-[color:var(--color-line)] my-2 flex justify-center items-center ${claseTransicion}`}

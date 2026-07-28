@@ -1,0 +1,29 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model RecuerdoViaje {
+  id        String   @id @default(uuid())
+  pais      String
+  provincia String
+  titulo    String
+  ubicacion String?
+  fecha     String?
+  fotos     Json     
+  frases    Json     
+  createdAt DateTime @default(now())
+}
+
+model MarcadorMapa {
+  id           String   @id @default(uuid())
+  coordinates  Json     
+  color        String
+  size         Int
+  etiqueta     String?
+  nivelOrigen  String
+  pais         String
+}
