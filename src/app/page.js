@@ -189,6 +189,16 @@ export default function Home() {
     return () => clearTimeout(t);
   }, []);
 
+  useEffect(() => {
+    const prevGesture = (e) => e.preventDefault();
+    document.addEventListener("gesturestart", prevGesture, { passive: false });
+    document.addEventListener("gesturechange", prevGesture, { passive: false });
+    return () => {
+      document.removeEventListener("gesturestart", prevGesture);
+      document.removeEventListener("gesturechange", prevGesture);
+    };
+  }, []);
+
   const [nivel, setNivel] = useState("mundo");
   const [paisActual, setPaisActual] = useState("");
   const [provinciaActual, setProvinciaActual] = useState("");
@@ -550,12 +560,28 @@ export default function Home() {
 
         <header className="w-full flex items-center justify-between py-2 shrink-0 px-1 relative min-h-[52px]">
           <div className="flex items-center min-w-[70px]">
-            {nivel !== "mundo" && (
+            {nivel !== "mundo" ? (
               <button
                 onClick={handleVolver}
                 className="btn-fantasma px-3 py-1.5 text-xs sm:text-sm font-semibold flex items-center gap-1 shadow-sm active:scale-95 transition-transform"
               >
                 <span>←</span> <span>Volver</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setModalListaMarcadoresAbierto(true)}
+                className="w-10 h-10 rounded-full flex items-center justify-center shadow-md bg-white text-[color:var(--color-ink)] hover:bg-gray-50 active:scale-90 transition-transform relative"
+                title="Gestionar todos mis marcadores"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M12 3v3m0 12v3M3 12h3m12 0h3" />
+                </svg>
+                {marcadores.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-[var(--color-plum)] text-white text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-sm">
+                    {marcadores.length}
+                  </span>
+                )}
               </button>
             )}
           </div>
@@ -574,21 +600,23 @@ export default function Home() {
           </div>
 
           <div className="min-w-[70px] flex items-center justify-end gap-2">
-            <button
-              onClick={() => setModalListaMarcadoresAbierto(true)}
-              className="w-10 h-10 rounded-full flex items-center justify-center shadow-md bg-white text-[color:var(--color-ink)] hover:bg-gray-50 active:scale-90 transition-transform relative"
-              title="Gestionar todos mis marcadores"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="3" />
-                <path d="M12 3v3m0 12v3M3 12h3m12 0h3" />
-              </svg>
-              {marcadores.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[var(--color-plum)] text-white text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-sm">
-                  {marcadores.length}
-                </span>
-              )}
-            </button>
+            {nivel !== "mundo" && (
+              <button
+                onClick={() => setModalListaMarcadoresAbierto(true)}
+                className="w-10 h-10 rounded-full flex items-center justify-center shadow-md bg-white text-[color:var(--color-ink)] hover:bg-gray-50 active:scale-90 transition-transform relative"
+                title="Gestionar todos mis marcadores"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M12 3v3m0 12v3M3 12h3m12 0h3" />
+                </svg>
+                {marcadores.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-[var(--color-plum)] text-white text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-sm">
+                    {marcadores.length}
+                  </span>
+                )}
+              </button>
+            )}
 
             {nivel !== "provincia" && (
               <button
@@ -1083,7 +1111,7 @@ export default function Home() {
                   <option value="">-- Sin álbum enlazado --</option>
                   {todosLosRecuerdos.map((r) => (
                     <option key={r.id} value={r.id}>
-                      📖 {r.titulo} ({r.provincia || r.pais})
+                      {r.titulo} ({r.provincia || r.pais})
                     </option>
                   ))}
                 </select>
@@ -1166,7 +1194,11 @@ export default function Home() {
                             </span>
                             {albumEnlazado && (
                               <span className="text-xs text-[color:var(--color-plum)] font-caveat text-sm font-semibold truncate flex items-center gap-1">
-                                📖 {albumEnlazado.titulo}
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                                </svg>
+                                {albumEnlazado.titulo}
                               </span>
                             )}
                           </div>
@@ -1192,18 +1224,24 @@ export default function Home() {
                               setModalListaMarcadoresAbierto(false);
                               abrirEdicionMarcador(m, e);
                             }}
-                            className="w-8 h-8 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors text-xs"
+                            className="w-8 h-8 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
                             title="Editar"
                           >
-                            ✏️
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M12 20h9" />
+                              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                            </svg>
                           </button>
                           <button
                             type="button"
                             onClick={() => eliminarMarcador(m.id)}
-                            className="w-8 h-8 rounded-xl bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100 transition-colors text-xs"
+                            className="w-8 h-8 rounded-xl bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100 transition-colors"
                             title="Eliminar"
                           >
-                            🗑️
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            </svg>
                           </button>
                         </div>
                       </div>
