@@ -489,12 +489,12 @@ export default function Home() {
   };
 
   const marcadoresMundo = useMemo(
-    () => marcadores,
+    () => marcadores.filter((m) => m.nivelOrigen === "mundo"),
     [marcadores]
   );
 
   const marcadoresPaisActual = useMemo(
-    () => marcadores.filter((m) => esMismoPais(m.pais, paisActual)),
+    () => marcadores.filter((m) => m.nivelOrigen !== "mundo" && esMismoPais(m.pais, paisActual)),
     [marcadores, paisActual]
   );
 
@@ -631,11 +631,9 @@ export default function Home() {
                   <circle cx="12" cy="12" r="3" />
                   <path d="M12 3v3m0 12v3M3 12h3m12 0h3" />
                 </svg>
-                {marcadores.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-[var(--color-plum)] text-white text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-sm">
-                    {marcadores.length}
-                  </span>
-                )}
+                <span className="absolute -top-1 -right-1 bg-[var(--color-plum)] text-white text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-sm">
+                  {marcadoresVisibles.length}
+                </span>
               </button>
             )}
           </div>
@@ -664,11 +662,9 @@ export default function Home() {
                   <circle cx="12" cy="12" r="3" />
                   <path d="M12 3v3m0 12v3M3 12h3m12 0h3" />
                 </svg>
-                {marcadores.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-[var(--color-plum)] text-white text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-sm">
-                    {marcadores.length}
-                  </span>
-                )}
+                <span className="absolute -top-1 -right-1 bg-[var(--color-plum)] text-white text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-sm">
+                  {marcadoresVisibles.length}
+                </span>
               </button>
             )}
 
@@ -754,13 +750,15 @@ export default function Home() {
 
                     {/* MARCADORES MUNDO */}
                     {marcadoresMundo.map((m) => {
-                      const r = Math.max(m.size || 6, 5);
-                      const grosorBorde = Math.max(1, +(r * 0.25).toFixed(1));
+                      const r = m.size ?? 6;
+                      const grosorBorde = r <= 2 ? 0.5 : Math.max(1, +(r * 0.25).toFixed(1));
+                      const rHalo = r <= 2 ? r + 1 : r + 3;
+                      const rHitArea = Math.max(r + 14, 12);
                       return (
                         <Marker key={m.id} coordinates={m.coordinates}>
                           <g onClick={(e) => alPulsarMarcador(m, e)} className="cursor-pointer group">
-                            <circle r={r + 14} fill="transparent" />
-                            <circle r={r + 3} fill={m.color} opacity={0.35} className="animate-ping" />
+                            <circle r={rHitArea} fill="transparent" />
+                            <circle r={rHalo} fill={m.color} opacity={0.35} className="animate-ping" />
                             <circle r={r} fill={m.color} stroke="#ffffff" strokeWidth={grosorBorde} />
                             {m.etiqueta && (
                               <text
@@ -875,13 +873,15 @@ export default function Home() {
                       ))}
 
                     {marcadoresPaisActual.map((m) => {
-                      const r = Math.max(m.size || 6, 5);
-                      const grosorBorde = Math.max(1, +(r * 0.25).toFixed(1));
+                      const r = m.size ?? 6;
+                      const grosorBorde = r <= 2 ? 0.5 : Math.max(1, +(r * 0.25).toFixed(1));
+                      const rHalo = r <= 2 ? r + 1 : r + 3;
+                      const rHitArea = Math.max(r + 14, 12);
                       return (
                         <Marker key={m.id} coordinates={m.coordinates}>
                           <g onClick={(e) => alPulsarMarcador(m, e)} className="cursor-pointer group">
-                            <circle r={r + 14} fill="transparent" />
-                            <circle r={r + 3} fill={m.color} opacity={0.35} className="animate-ping" />
+                            <circle r={rHitArea} fill="transparent" />
+                            <circle r={rHalo} fill={m.color} opacity={0.35} className="animate-ping" />
                             <circle r={r} fill={m.color} stroke="#ffffff" strokeWidth={grosorBorde} />
                             {m.etiqueta && (
                               <text
