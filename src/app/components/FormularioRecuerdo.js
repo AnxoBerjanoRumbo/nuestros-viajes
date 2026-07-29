@@ -10,6 +10,8 @@ export default function FormularioRecuerdo({ provincia, pais, recuerdoExistente,
   // Lista de fotos subidas
   const [fotos, setFotos] = useState(recuerdoExistente?.fotos || []);
   const [portadaId, setPortadaId] = useState(recuerdoExistente?.portadaId || (recuerdoExistente?.fotos?.[0]?.id || null));
+  const [cargandoFotos, setCargandoFotos] = useState(false);
+  const [progresoSubida, setProgresoSubida] = useState({ actual: 0, total: 0 });
 
   // Lista de frases para el fondo
   const [frases, setFrases] = useState(
@@ -25,9 +27,13 @@ export default function FormularioRecuerdo({ provincia, pais, recuerdoExistente,
     const archivos = Array.from(e.target.files || []);
     if (!archivos.length) return;
 
+    setCargandoFotos(true);
+    setProgresoSubida({ actual: 0, total: archivos.length });
+
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
     const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
+    let subidas = 0;
     for (const file of archivos) {
       const formData = new FormData();
       formData.append("file", file);
@@ -60,8 +66,12 @@ export default function FormularioRecuerdo({ provincia, pais, recuerdoExistente,
         }
       } catch (error) {
         console.error("Error al subir la foto a Cloudinary:", error);
+      } finally {
+        subidas++;
+        setProgresoSubida({ actual: subidas, total: archivos.length });
       }
     }
+    setCargandoFotos(false);
   };
 
   const eliminarFoto = (id) => {
@@ -207,15 +217,39 @@ export default function FormularioRecuerdo({ provincia, pais, recuerdoExistente,
               <circle cx="8.5" cy="8.5" r="1.5" />
               <polyline points="21 15 16 10 5 21" />
             </svg>
-            <span className="text-sm font-semibold text-[color:var(--color-ink)]">Añadir fotografías</span>
+            <span className="text-sm font-semibold text-[color:var(--color-ink)]">
+              {cargandoFotos ? "Subiendo fotos..." : "Añadir fotografías"}
+            </span>
             <input
               type="file"
               accept="image/*"
               multiple
+              disabled={cargandoFotos}
               onChange={handleSubirFotos}
               className="hidden"
             />
           </label>
+
+          {/* BARRA DE PROGRESO DE SUBIDA EN TIEMPO REAL */}
+          {cargandoFotos && (
+            <div className="flex flex-col gap-1.5 p-3 rounded-2xl bg-rose-50 border border-rose-100 animate-pulse">
+              <div className="flex justify-between items-center text-xs font-semibold text-[color:var(--color-rose)]">
+                <span>Subiendo fotografías...</span>
+                <span>
+                  {progresoSubida.actual} de {progresoSubida.total} (
+                  {progresoSubida.total > 0 ? Math.round((progresoSubida.actual / progresoSubida.total) * 100) : 0}%)
+                </span>
+              </div>
+              <div className="w-full bg-rose-200/60 rounded-full h-2 overflow-hidden">
+                <div
+                  className="bg-[var(--color-rose)] h-full transition-all duration-300 rounded-full"
+                  style={{
+                    width: `${progresoSubida.total > 0 ? (progresoSubida.actual / progresoSubida.total) * 100 : 0}%`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
 
           {fotos.length > 0 && (
             <div className="flex flex-col gap-2 mt-1">
@@ -315,9 +349,10 @@ export default function FormularioRecuerdo({ provincia, pais, recuerdoExistente,
           </button>
           <button
             type="submit"
-            className="btn-primario px-6 py-2.5 text-sm font-semibold shadow-md"
+            disabled={cargandoFotos}
+            className="btn-primario px-6 py-2.5 text-sm font-semibold shadow-md disabled:opacity-50"
           >
-            Guardar Viaje
+            {cargandoFotos ? "Subiendo fotos..." : "Guardar Viaje"}
           </button>
         </div>
       </form>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from "react-simple-maps";
+import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker, Line } from "react-simple-maps";
 import { mapasProvincias } from "./diccionarioMapas";
 import { useGeografia } from "./hooks/useGeografia";
 import { calcularVistaAjustada, limpiarGeoJSON } from "./utils/geoUtils";
@@ -236,6 +236,7 @@ export default function Home() {
   const [etiquetaMarcador, setEtiquetaMarcador] = useState("");
   const [albumIdSeleccionado, setAlbumIdSeleccionado] = useState("");
   const [modalListaMarcadoresAbierto, setModalListaMarcadoresAbierto] = useState(false);
+  const [mostrarRutas, setMostrarRutas] = useState(true);
 
   const todosLosRecuerdos = useMemo(() => {
     const lista = [];
@@ -504,6 +505,28 @@ export default function Home() {
     return marcadoresPaisActual;
   }, [nivel, marcadoresMundo, marcadoresPaisActual]);
 
+  const lineasRutaMundo = useMemo(() => {
+    if (marcadoresMundo.length < 2) return [];
+    const lineas = [];
+    for (let i = 0; i < marcadoresMundo.length - 1; i++) {
+      const m1 = marcadoresMundo[i];
+      const m2 = marcadoresMundo[i + 1];
+      lineas.push({ id: `mundo-${m1.id}-${m2.id}`, from: m1.coordinates, to: m2.coordinates });
+    }
+    return lineas;
+  }, [marcadoresMundo]);
+
+  const lineasRutaPais = useMemo(() => {
+    if (marcadoresPaisActual.length < 2) return [];
+    const lineas = [];
+    for (let i = 0; i < marcadoresPaisActual.length - 1; i++) {
+      const m1 = marcadoresPaisActual[i];
+      const m2 = marcadoresPaisActual[i + 1];
+      lineas.push({ id: `pais-${m1.id}-${m2.id}`, from: m1.coordinates, to: m2.coordinates });
+    }
+    return lineas;
+  }, [marcadoresPaisActual]);
+
   // Tras guardar un recuerdo desde el formulario, recargamos la BD
   const guardarViaje = async () => {
     await cargarDatosDesdeBD();
@@ -714,6 +737,21 @@ export default function Home() {
                       }
                     </Geographies>
 
+                    {/* LÍNEAS DE VUELO / RUTA DISCONTINUAS EN MAPA MUNDI */}
+                    {mostrarRutas &&
+                      lineasRutaMundo.map((linea) => (
+                        <Line
+                          key={linea.id}
+                          from={linea.from}
+                          to={linea.to}
+                          stroke="#c2416b"
+                          strokeWidth={2}
+                          strokeDasharray="6 4"
+                          strokeLinecap="round"
+                          style={{ default: { outline: "none" } }}
+                        />
+                      ))}
+
                     {/* MARCADORES MUNDO */}
                     {marcadoresMundo.map((m) => {
                       const r = m.size || 6;
@@ -749,6 +787,16 @@ export default function Home() {
                 </ComposableMap>
 
                 <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-10">
+                  <button
+                    type="button"
+                    onClick={() => setMostrarRutas((prev) => !prev)}
+                    className={`${botonZoom} ${mostrarRutas ? "text-[color:var(--color-rose)] ring-2 ring-rose-200" : "text-gray-400"}`}
+                    title={mostrarRutas ? "Ocultar Líneas de Ruta" : "Mostrar Líneas de Ruta"}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3.5c-.5-.5-2.5 0-4 1.5L13.5 8.5 5.3 6.7c-.5-.1-1 .1-1.3.5l-.8 1 5.3 3.6-2.5 2.5-2.3-.6-.8.8 2.6 2.6 2.6 2.6.8-.8-.6-2.3 2.5-2.5 3.6 5.3 1-.8c.4-.3.6-.8.5-1.3z" />
+                    </svg>
+                  </button>
                   <button type="button" onClick={acercarMundo} className={botonZoom} title="Acercar">+</button>
                   <button type="button" onClick={alejarMundo} className={botonZoom} title="Alejar">−</button>
                   <button type="button" onClick={restablecerMundo} className={botonZoom} title="Restablecer">⟲</button>
@@ -811,6 +859,21 @@ export default function Home() {
                       }
                     </Geographies>
 
+                    {/* LÍNEAS DE VUELO / RUTA DISCONTINUAS EN PAÍS */}
+                    {mostrarRutas &&
+                      lineasRutaPais.map((linea) => (
+                        <Line
+                          key={linea.id}
+                          from={linea.from}
+                          to={linea.to}
+                          stroke="#c2416b"
+                          strokeWidth={2}
+                          strokeDasharray="6 4"
+                          strokeLinecap="round"
+                          style={{ default: { outline: "none" } }}
+                        />
+                      ))}
+
                     {marcadoresPaisActual.map((m) => {
                       const r = m.size || 6;
                       const grosorBorde = Math.max(1, +(r * 0.25).toFixed(1));
@@ -845,6 +908,16 @@ export default function Home() {
                 </ComposableMap>
 
                 <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-10">
+                  <button
+                    type="button"
+                    onClick={() => setMostrarRutas((prev) => !prev)}
+                    className={`${botonZoom} ${mostrarRutas ? "text-[color:var(--color-rose)] ring-2 ring-rose-200" : "text-gray-400"}`}
+                    title={mostrarRutas ? "Ocultar Líneas de Ruta" : "Mostrar Líneas de Ruta"}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3.5c-.5-.5-2.5 0-4 1.5L13.5 8.5 5.3 6.7c-.5-.1-1 .1-1.3.5l-.8 1 5.3 3.6-2.5 2.5-2.3-.6-.8.8 2.6 2.6 2.6 2.6.8-.8-.6-2.3 2.5-2.5 3.6 5.3 1-.8c.4-.3.6-.8.5-1.3z" />
+                    </svg>
+                  </button>
                   <button type="button" onClick={acercar} className={botonZoom} title="Acercar">+</button>
                   <button type="button" onClick={alejar} className={botonZoom} title="Alejar">−</button>
                   <button type="button" onClick={restablecerVista} className={botonZoom} title="Restablecer">⟲</button>
