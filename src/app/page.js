@@ -29,6 +29,20 @@ const PALETA = {
   borde: "#ffffff",
 };
 
+function esMismoPais(p1, p2) {
+  if (!p1 || !p2) return false;
+  const a = p1.trim().toLowerCase();
+  const b = p2.trim().toLowerCase();
+  if (a === b) return true;
+  if ((a === "spain" || a === "españa") && (b === "spain" || b === "españa")) return true;
+  if ((a === "france" || a === "francia") && (b === "france" || b === "francia")) return true;
+  if ((a === "italy" || a === "italia") && (b === "italy" || b === "italia")) return true;
+  if ((a === "germany" || a === "alemania") && (b === "germany" || b === "alemania")) return true;
+  if ((a === "portugal") && (b === "portugal")) return true;
+  if ((a === "united kingdom" || a === "reino unido") && (b === "united kingdom" || b === "reino unido")) return true;
+  return false;
+}
+
 // Componente Splash de entrada (Intacto)
 function SplashEntrada({ visible }) {
   const [completado, setCompletado] = useState(false);
@@ -233,6 +247,12 @@ export default function Home() {
     return lista;
   }, [viajesGuardados]);
 
+  const recuerdosFiltradosParaMarcador = useMemo(() => {
+    if (!paisActual || nivel === "mundo") return todosLosRecuerdos;
+    const filtrados = todosLosRecuerdos.filter((r) => esMismoPais(r.pais, paisActual));
+    return filtrados.length > 0 ? filtrados : todosLosRecuerdos;
+  }, [todosLosRecuerdos, paisActual, nivel]);
+
   const [mundoListo, setMundoListo] = useState(false);
   const [vistaMundo, setVistaMundo] = useState({ coordinates: [0, 0], zoom: 1 });
 
@@ -419,6 +439,10 @@ export default function Home() {
 
   const alPulsarMarcador = (m, e) => {
     if (e) e.stopPropagation();
+    // En el mapa mundi los marcadores son puramente visuales y no se abren al tocarlos en la pantalla
+    if (nivel === "mundo") {
+      return;
+    }
     if (m.albumId) {
       const albumEncontrado = todosLosRecuerdos.find((r) => r.id === m.albumId);
       if (albumEncontrado) {
@@ -469,9 +493,16 @@ export default function Home() {
   );
 
   const marcadoresPaisActual = useMemo(
-    () => marcadores.filter((m) => m.nivelOrigen === "pais" && m.pais === paisActual),
+    () => marcadores.filter((m) => m.nivelOrigen !== "mundo" && esMismoPais(m.pais, paisActual)),
     [marcadores, paisActual]
   );
+
+  const marcadoresVisibles = useMemo(() => {
+    if (nivel === "mundo") {
+      return marcadoresMundo;
+    }
+    return marcadoresPaisActual;
+  }, [nivel, marcadoresMundo, marcadoresPaisActual]);
 
   // Tras guardar un recuerdo desde el formulario, recargamos la BD
   const guardarViaje = async () => {
@@ -944,7 +975,7 @@ export default function Home() {
                   <span className="w-2.5 h-2.5 rounded-full bg-gray-400 shrink-0" />
                   <input
                     type="range"
-                    min="3"
+                    min="1"
                     max="14"
                     step="1"
                     value={tamanoSeleccionado}
@@ -1074,7 +1105,7 @@ export default function Home() {
                   <span className="w-2.5 h-2.5 rounded-full bg-gray-400 shrink-0" />
                   <input
                     type="range"
-                    min="3"
+                    min="1"
                     max="14"
                     step="1"
                     value={tamanoSeleccionado}
@@ -1109,7 +1140,7 @@ export default function Home() {
                   className="campo-sutil w-full text-sm bg-white cursor-pointer"
                 >
                   <option value="">-- Sin álbum enlazado --</option>
-                  {todosLosRecuerdos.map((r) => (
+                  {recuerdosFiltradosParaMarcador.map((r) => (
                     <option key={r.id} value={r.id}>
                       {r.titulo} ({r.provincia || r.pais})
                     </option>
@@ -1156,7 +1187,7 @@ export default function Home() {
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full bg-[var(--color-plum)]" />
                   <h3 className="font-display text-xl font-bold text-[color:var(--color-ink)]">
-                    Mis Marcadores ({marcadores.length})
+                    Mis Marcadores ({marcadoresVisibles.length})
                   </h3>
                 </div>
                 <button
@@ -1168,12 +1199,12 @@ export default function Home() {
               </div>
 
               <div className="flex flex-col gap-3 overflow-y-auto pr-1 flex-1">
-                {marcadores.length === 0 ? (
+                {marcadoresVisibles.length === 0 ? (
                   <p className="text-center text-gray-500 py-8 font-caveat text-lg">
-                    Aún no has colocado marcadores en el mapa.
+                    Aún no has colocado marcadores en esta vista.
                   </p>
                 ) : (
-                  marcadores.map((m) => {
+                  marcadoresVisibles.map((m) => {
                     const albumEnlazado = todosLosRecuerdos.find((r) => r.id === m.albumId);
                     return (
                       <div
