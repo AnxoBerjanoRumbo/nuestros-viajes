@@ -248,6 +248,17 @@ export default function Home() {
     return lista;
   }, [viajesGuardados]);
 
+  const paisesVisitados = useMemo(() => {
+    const setPaises = new Set();
+    todosLosRecuerdos.forEach((r) => {
+      if (r.pais) setPaises.add(r.pais.toLowerCase());
+    });
+    marcadores.forEach((m) => {
+      if (m.pais && m.pais !== "Mundo") setPaises.add(m.pais.toLowerCase());
+    });
+    return setPaises;
+  }, [todosLosRecuerdos, marcadores]);
+
   const recuerdosFiltradosParaMarcador = useMemo(() => {
     if (!paisActual || nivel === "mundo") return todosLosRecuerdos;
     const filtrados = todosLosRecuerdos.filter((r) => esMismoPais(r.pais, paisActual));
@@ -668,7 +679,7 @@ export default function Home() {
               </button>
             )}
 
-            {nivel !== "provincia" && (
+            {nivel !== "provincia" && nivel !== "mundo" && (
               <button
                 onClick={() => setModoCrearMarcador((prev) => !prev)}
                 className={`w-10 h-10 rounded-full flex items-center justify-center shadow-md transition-all active:scale-90 ${
@@ -715,72 +726,34 @@ export default function Home() {
                   >
                     <Geographies geography={mapaMundo}>
                       {({ geographies, projection }) =>
-                        geographies.map((geo) => (
-                          <Geography
-                            key={geo.rsmKey}
-                            geography={geo}
-                            onClick={(evt) => handleClicMapa(geo, evt, projection)}
-                            fill={PALETA.mundoDefecto}
-                            stroke={PALETA.borde}
-                            strokeWidth={0.8}
-                            style={{
-                              default: { outline: "none" },
-                              hover: { fill: PALETA.mundoHover, outline: "none" },
-                              pressed: { fill: PALETA.mundoHover, outline: "none" },
-                            }}
-                          />
-                        ))
+                        geographies.map((geo) => {
+                          const nombreGeo = geo.properties?.name || geo.properties?.name_long || "";
+                          const esVisitado =
+                            paisesVisitados.has(nombreGeo.toLowerCase()) ||
+                            (esMismoPais(nombreGeo, "Spain") &&
+                              (paisesVisitados.has("spain") || paisesVisitados.has("españa")));
+                          const fillDefecto = esVisitado ? "#e8a5b8" : PALETA.mundoDefecto;
+                          const fillHover = esVisitado ? "#d87293" : PALETA.mundoHover;
+                          return (
+                            <Geography
+                              key={geo.rsmKey}
+                              geography={geo}
+                              onClick={(evt) => handleClicMapa(geo, evt, projection)}
+                              fill={fillDefecto}
+                              stroke={PALETA.borde}
+                              strokeWidth={0.8}
+                              style={{
+                                default: { outline: "none", transition: "fill 0.2s ease" },
+                                hover: { fill: fillHover, outline: "none" },
+                                pressed: { fill: fillHover, outline: "none" },
+                              }}
+                            />
+                          );
+                        })
                       }
                     </Geographies>
 
-                    {/* LÍNEAS DE VUELO / RUTA DISCONTINUAS EN MAPA MUNDI */}
-                    {mostrarRutas &&
-                      lineasRutaMundo.map((linea) => (
-                        <Line
-                          key={linea.id}
-                          from={linea.from}
-                          to={linea.to}
-                          stroke="#c2416b"
-                          strokeWidth={2}
-                          strokeDasharray="6 4"
-                          strokeLinecap="round"
-                          style={{ default: { outline: "none" } }}
-                        />
-                      ))}
 
-                    {/* MARCADORES MUNDO */}
-                    {marcadoresMundo.map((m) => {
-                      const r = m.size ?? 6;
-                      const grosorBorde = r <= 2 ? 0.5 : Math.max(1, +(r * 0.25).toFixed(1));
-                      const rHalo = r <= 2 ? r + 1 : r + 3;
-                      const rHitArea = Math.max(r + 14, 12);
-                      return (
-                        <Marker key={m.id} coordinates={m.coordinates}>
-                          <g onClick={(e) => alPulsarMarcador(m, e)} className="cursor-pointer group">
-                            <circle r={rHitArea} fill="transparent" />
-                            <circle r={rHalo} fill={m.color} opacity={0.35} className="animate-ping" />
-                            <circle r={r} fill={m.color} stroke="#ffffff" strokeWidth={grosorBorde} />
-                            {m.etiqueta && (
-                              <text
-                                textAnchor="middle"
-                                y={-(r + 5)}
-                                style={{
-                                  fontFamily: "var(--font-caveat), cursive",
-                                  fontSize: "14px",
-                                  fontWeight: "bold",
-                                  fill: "var(--color-ink)",
-                                  stroke: "#ffffff",
-                                  strokeWidth: "3px",
-                                  paintOrder: "stroke",
-                                }}
-                              >
-                                {m.etiqueta}
-                              </text>
-                            )}
-                          </g>
-                        </Marker>
-                      );
-                    })}
                   </ZoomableGroup>
                 </ComposableMap>
 
@@ -876,12 +849,12 @@ export default function Home() {
                       const r = m.size ?? 6;
                       const grosorBorde = r <= 2 ? 0.5 : Math.max(1, +(r * 0.25).toFixed(1));
                       const rHalo = r <= 2 ? r + 1 : r + 3;
-                      const rHitArea = Math.max(r + 14, 12);
+                      const rHitArea = r + 2;
                       return (
                         <Marker key={m.id} coordinates={m.coordinates}>
                           <g onClick={(e) => alPulsarMarcador(m, e)} className="cursor-pointer group">
                             <circle r={rHitArea} fill="transparent" />
-                            <circle r={rHalo} fill={m.color} opacity={0.35} className="animate-ping" />
+                            <circle r={rHalo} fill={m.color} opacity={0.35} className="animate-ping" pointerEvents="none" />
                             <circle r={r} fill={m.color} stroke="#ffffff" strokeWidth={grosorBorde} />
                             {m.etiqueta && (
                               <text
@@ -895,6 +868,7 @@ export default function Home() {
                                   stroke: "#ffffff",
                                   strokeWidth: "3px",
                                   paintOrder: "stroke",
+                                  pointerEvents: "none",
                                 }}
                               >
                                 {m.etiqueta}
