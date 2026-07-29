@@ -489,12 +489,12 @@ export default function Home() {
   };
 
   const marcadoresMundo = useMemo(
-    () => marcadores.filter((m) => m.nivelOrigen === "mundo"),
+    () => marcadores,
     [marcadores]
   );
 
   const marcadoresPaisActual = useMemo(
-    () => marcadores.filter((m) => m.nivelOrigen !== "mundo" && esMismoPais(m.pais, paisActual)),
+    () => marcadores.filter((m) => esMismoPais(m.pais, paisActual)),
     [marcadores, paisActual]
   );
 
@@ -754,7 +754,7 @@ export default function Home() {
 
                     {/* MARCADORES MUNDO */}
                     {marcadoresMundo.map((m) => {
-                      const r = m.size || 6;
+                      const r = Math.max(m.size || 6, 5);
                       const grosorBorde = Math.max(1, +(r * 0.25).toFixed(1));
                       return (
                         <Marker key={m.id} coordinates={m.coordinates}>
@@ -875,7 +875,7 @@ export default function Home() {
                       ))}
 
                     {marcadoresPaisActual.map((m) => {
-                      const r = m.size || 6;
+                      const r = Math.max(m.size || 6, 5);
                       const grosorBorde = Math.max(1, +(r * 0.25).toFixed(1));
                       return (
                         <Marker key={m.id} coordinates={m.coordinates}>
