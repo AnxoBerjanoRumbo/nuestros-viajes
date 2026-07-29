@@ -29,6 +29,30 @@ const PALETA = {
   borde: "#ffffff",
 };
 
+const CENTROIDES_PAISES = {
+  spain: [-3.7038, 40.4168],
+  españa: [-3.7038, 40.4168],
+  france: [2.2137, 46.2276],
+  francia: [2.2137, 46.2276],
+  italy: [12.5674, 41.8719],
+  italia: [12.5674, 41.8719],
+  portugal: [-8.2245, 39.3999],
+  germany: [10.4515, 51.1657],
+  alemania: [10.4515, 51.1657],
+  "united kingdom": [-3.436, 55.3781],
+  "reino unido": [-3.436, 55.3781],
+  "united states": [-95.7129, 37.0902],
+  "estados unidos": [-95.7129, 37.0902],
+  japan: [138.2529, 36.2048],
+  japón: [138.2529, 36.2048],
+  china: [104.1954, 35.8617],
+  brazil: [-51.9253, -14.235],
+  brasil: [-51.9253, -14.235],
+  argentina: [-63.6167, -38.4161],
+  mexico: [-102.5528, 23.6345],
+  méxico: [-102.5528, 23.6345],
+};
+
 function esMismoPais(p1, p2) {
   if (!p1 || !p2) return false;
   const a = p1.trim().toLowerCase();
@@ -517,15 +541,34 @@ export default function Home() {
   }, [nivel, marcadoresMundo, marcadoresPaisActual]);
 
   const lineasRutaMundo = useMemo(() => {
-    if (marcadoresMundo.length < 2) return [];
+    const recuerdosOrdenados = [...todosLosRecuerdos].sort(
+      (a, b) => new Date(a.fecha || 0) - new Date(b.fecha || 0)
+    );
+    const centroidesConsecutivos = [];
+    const paisesVistos = new Set();
+
+    recuerdosOrdenados.forEach((r) => {
+      if (!r.pais) return;
+      const key = r.pais.trim().toLowerCase();
+      if (!paisesVistos.has(key)) {
+        paisesVistos.add(key);
+        const coords = CENTROIDES_PAISES[key];
+        if (coords) {
+          centroidesConsecutivos.push({ pais: r.pais, coords });
+        }
+      }
+    });
+
+    if (centroidesConsecutivos.length < 2) return [];
+
     const lineas = [];
-    for (let i = 0; i < marcadoresMundo.length - 1; i++) {
-      const m1 = marcadoresMundo[i];
-      const m2 = marcadoresMundo[i + 1];
-      lineas.push({ id: `mundo-${m1.id}-${m2.id}`, from: m1.coordinates, to: m2.coordinates });
+    for (let i = 0; i < centroidesConsecutivos.length - 1; i++) {
+      const c1 = centroidesConsecutivos[i];
+      const c2 = centroidesConsecutivos[i + 1];
+      lineas.push({ id: `ruta-${i}`, from: c1.coords, to: c2.coords });
     }
     return lineas;
-  }, [marcadoresMundo]);
+  }, [todosLosRecuerdos]);
 
   const lineasRutaPais = useMemo(() => {
     if (marcadoresPaisActual.length < 2) return [];
@@ -738,6 +781,21 @@ export default function Home() {
                         })
                       }
                     </Geographies>
+
+                    {/* LÍNEAS DE VUELO ENTRE PAÍSES VISITADOS EN EL MAPA MUNDI */}
+                    {mostrarRutas &&
+                      lineasRutaMundo.map((linea) => (
+                        <Line
+                          key={linea.id}
+                          from={linea.from}
+                          to={linea.to}
+                          stroke="#c2416b"
+                          strokeWidth={2}
+                          strokeDasharray="6 4"
+                          strokeLinecap="round"
+                          style={{ default: { outline: "none", pointerEvents: "none" } }}
+                        />
+                      ))}
 
 
                   </ZoomableGroup>
