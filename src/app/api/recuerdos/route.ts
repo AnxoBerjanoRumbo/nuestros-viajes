@@ -33,7 +33,7 @@ export async function POST(req) {
 
     // 1. Si recibimos un marcador
     if (body.marcador) {
-      const { coordinates, color, size, etiqueta, nivelOrigen, pais } = body.marcador;
+      const { coordinates, color, size, etiqueta, nivelOrigen, pais, albumId } = body.marcador;
       const nuevoMarcador = await prisma.marcadorMapa.create({
         data: {
           coordinates: coordinates || [0, 0],
@@ -42,6 +42,7 @@ export async function POST(req) {
           etiqueta: etiqueta || "",
           nivelOrigen: nivelOrigen || "mundo",
           pais: pais || "Mundo",
+          albumId: albumId || null,
         },
       });
 
@@ -82,13 +83,14 @@ export async function PUT(req) {
 
     // Actualizar marcador
     if (body.marcador && body.marcador.id) {
-      const { id, color, size, etiqueta } = body.marcador;
+      const { id, color, size, etiqueta, albumId } = body.marcador;
       const marcadorActualizado = await prisma.marcadorMapa.update({
         where: { id },
         data: {
           color,
           size,
           etiqueta: etiqueta || "",
+          albumId: albumId || null,
         },
       });
       revalidatePath("/");

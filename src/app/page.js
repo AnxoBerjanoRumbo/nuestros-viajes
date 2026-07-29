@@ -210,6 +210,18 @@ export default function Home() {
   const [colorSeleccionado, setColorSeleccionado] = useState(COLORES_MARCADOR[0].hex);
   const [tamanoSeleccionado, setTamanoSeleccionado] = useState(6);
   const [etiquetaMarcador, setEtiquetaMarcador] = useState("");
+  const [albumIdSeleccionado, setAlbumIdSeleccionado] = useState("");
+  const [modalListaMarcadoresAbierto, setModalListaMarcadoresAbierto] = useState(false);
+
+  const todosLosRecuerdos = useMemo(() => {
+    const lista = [];
+    Object.values(viajesGuardados).forEach((provinciasObj) => {
+      Object.values(provinciasObj).forEach((listaViajes) => {
+        listaViajes.forEach((v) => lista.push(v));
+      });
+    });
+    return lista;
+  }, [viajesGuardados]);
 
   const [mundoListo, setMundoListo] = useState(false);
   const [vistaMundo, setVistaMundo] = useState({ coordinates: [0, 0], zoom: 1 });
@@ -329,6 +341,7 @@ export default function Home() {
         setColorSeleccionado(COLORES_MARCADOR[0].hex);
         setTamanoSeleccionado(6);
         setEtiquetaMarcador("");
+        setAlbumIdSeleccionado("");
       }
       return;
     }
@@ -365,6 +378,7 @@ export default function Home() {
       etiqueta: etiquetaMarcador.trim(),
       nivelOrigen: nivel,
       pais: paisActual || "Mundo",
+      albumId: albumIdSeleccionado || null,
     };
 
     try {
@@ -380,15 +394,29 @@ export default function Home() {
 
     setMarcadorPendiente(null);
     setEtiquetaMarcador("");
+    setAlbumIdSeleccionado("");
     setModoCrearMarcador(false);
   };
 
   const abrirEdicionMarcador = (m, e) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     setMarcadorEnEdicion(m);
     setColorSeleccionado(m.color);
     setTamanoSeleccionado(m.size || 6);
     setEtiquetaMarcador(m.etiqueta || "");
+    setAlbumIdSeleccionado(m.albumId || "");
+  };
+
+  const alPulsarMarcador = (m, e) => {
+    if (e) e.stopPropagation();
+    if (m.albumId) {
+      const albumEncontrado = todosLosRecuerdos.find((r) => r.id === m.albumId);
+      if (albumEncontrado) {
+        setAlbumAbierto(albumEncontrado);
+        return;
+      }
+    }
+    abrirEdicionMarcador(m, e);
   };
 
   const guardarMarcadorEditado = async () => {
@@ -403,6 +431,7 @@ export default function Home() {
             color: colorSeleccionado,
             size: tamanoSeleccionado,
             etiqueta: etiquetaMarcador.trim(),
+            albumId: albumIdSeleccionado || null,
           },
         }),
       });
@@ -411,6 +440,7 @@ export default function Home() {
       console.error("Error al guardar marcador editado:", e);
     }
     setMarcadorEnEdicion(null);
+    setAlbumIdSeleccionado("");
   };
 
   const eliminarMarcador = async (id) => {
@@ -455,21 +485,45 @@ export default function Home() {
     }
   };
 
-  const actualizarNotaFoto = (recuerdoId, fotoId, notaDorso) => {
-    setViajesGuardados((prev) => {
-      const paisData = prev[paisActual] || {};
-      const provData = (paisData[provinciaActual] || []).map((v) =>
-        v.id !== recuerdoId
-          ? v
-          : { ...v, fotos: v.fotos.map((f) => (f.id === fotoId ? { ...f, notaDorso } : f)) }
-      );
-      return { ...prev, [paisActual]: { ...paisData, [provinciaActual]: provData } };
+  const actualizarNotaFoto = async (recuerdoId, fotoId, notaDorso) => {
+    let recuerdoEncontrado = null;
+    Object.values(viajesGuardados).forEach((provinciasObj) => {
+      Object.values(provinciasObj).forEach((listaViajes) => {
+        const hallado = listaViajes.find((v) => v.id === recuerdoId);
+        if (hallado) recuerdoEncontrado = hallado;
+      });
     });
-    setAlbumAbierto((prev) =>
-      prev && prev.id === recuerdoId
-        ? { ...prev, fotos: prev.fotos.map((f) => (f.id === fotoId ? { ...f, notaDorso } : f)) }
-        : prev
+
+    if (!recuerdoEncontrado) return;
+
+    const fotosActualizadas = (recuerdoEncontrado.fotos || []).map((f) =>
+      f.id === fotoId ? { ...f, notaDorso } : f
     );
+
+    const recuerdoActualizado = {
+      ...recuerdoEncontrado,
+      fotos: fotosActualizadas,
+    };
+
+    setViajesGuardados((prev) => {
+      const paisData = prev[recuerdoEncontrado.pais] || {};
+      const provData = (paisData[recuerdoEncontrado.provincia] || []).map((v) =>
+        v.id !== recuerdoId ? v : recuerdoActualizado
+      );
+      return { ...prev, [recuerdoEncontrado.pais]: { ...paisData, [recuerdoEncontrado.provincia]: provData } };
+    });
+
+    setAlbumAbierto((prev) => (prev && prev.id === recuerdoId ? recuerdoActualizado : prev));
+
+    try {
+      await fetch("/api/recuerdos", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(recuerdoActualizado),
+      });
+    } catch (e) {
+      console.error("Error al guardar la nota en la base de datos:", e);
+    }
   };
 
   const acercar = () => setVistaInteractiva((v) => ({ ...v, zoom: Math.min(v.zoom * 1.5, 10) }));
@@ -519,7 +573,23 @@ export default function Home() {
             )}
           </div>
 
-          <div className="min-w-[70px] flex justify-end">
+          <div className="min-w-[70px] flex items-center justify-end gap-2">
+            <button
+              onClick={() => setModalListaMarcadoresAbierto(true)}
+              className="w-10 h-10 rounded-full flex items-center justify-center shadow-md bg-white text-[color:var(--color-ink)] hover:bg-gray-50 active:scale-90 transition-transform relative"
+              title="Gestionar todos mis marcadores"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M12 3v3m0 12v3M3 12h3m12 0h3" />
+              </svg>
+              {marcadores.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[var(--color-plum)] text-white text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-sm">
+                  {marcadores.length}
+                </span>
+              )}
+            </button>
+
             {nivel !== "provincia" && (
               <button
                 onClick={() => setModoCrearMarcador((prev) => !prev)}
@@ -591,7 +661,7 @@ export default function Home() {
                       const grosorBorde = Math.max(1, +(r * 0.25).toFixed(1));
                       return (
                         <Marker key={m.id} coordinates={m.coordinates}>
-                          <g onClick={(e) => abrirEdicionMarcador(m, e)} className="cursor-pointer group">
+                          <g onClick={(e) => alPulsarMarcador(m, e)} className="cursor-pointer group">
                             <circle r={r + 14} fill="transparent" />
                             <circle r={r + 3} fill={m.color} opacity={0.35} className="animate-ping" />
                             <circle r={r} fill={m.color} stroke="#ffffff" strokeWidth={grosorBorde} />
@@ -687,7 +757,7 @@ export default function Home() {
                       const grosorBorde = Math.max(1, +(r * 0.25).toFixed(1));
                       return (
                         <Marker key={m.id} coordinates={m.coordinates}>
-                          <g onClick={(e) => abrirEdicionMarcador(m, e)} className="cursor-pointer group">
+                          <g onClick={(e) => alPulsarMarcador(m, e)} className="cursor-pointer group">
                             <circle r={r + 14} fill="transparent" />
                             <circle r={r + 3} fill={m.color} opacity={0.35} className="animate-ping" />
                             <circle r={r} fill={m.color} stroke="#ffffff" strokeWidth={grosorBorde} />
@@ -871,6 +941,29 @@ export default function Home() {
                 />
               </div>
 
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-ink-soft)]">
+                  Enlazar a un Álbum (Opcional)
+                </label>
+                <select
+                  value={albumIdSeleccionado}
+                  onChange={(e) => setAlbumIdSeleccionado(e.target.value)}
+                  className="campo-sutil w-full text-sm bg-white cursor-pointer"
+                >
+                  <option value="">-- Sin álbum enlazado --</option>
+                  {todosLosRecuerdos.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      📖 {r.titulo} ({r.provincia || r.pais})
+                    </option>
+                  ))}
+                </select>
+                {albumIdSeleccionado && (
+                  <p className="text-xs text-[color:var(--color-plum)] font-caveat text-sm mt-0.5">
+                    ✨ Al pulsar este punto en el mapa, abrirá este álbum directamente.
+                  </p>
+                )}
+              </div>
+
               <div className="flex justify-end gap-3 mt-2 pb-2">
                 <button
                   type="button"
@@ -978,6 +1071,29 @@ export default function Home() {
                 />
               </div>
 
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-ink-soft)]">
+                  Enlazar a un Álbum (Opcional)
+                </label>
+                <select
+                  value={albumIdSeleccionado}
+                  onChange={(e) => setAlbumIdSeleccionado(e.target.value)}
+                  className="campo-sutil w-full text-sm bg-white cursor-pointer"
+                >
+                  <option value="">-- Sin álbum enlazado --</option>
+                  {todosLosRecuerdos.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      📖 {r.titulo} ({r.provincia || r.pais})
+                    </option>
+                  ))}
+                </select>
+                {albumIdSeleccionado && (
+                  <p className="text-xs text-[color:var(--color-plum)] font-caveat text-sm mt-0.5">
+                    ✨ Al pulsar este punto en el mapa, abrirá este álbum directamente.
+                  </p>
+                )}
+              </div>
+
               <div className="flex justify-end gap-3 mt-2 pb-2">
                 <button
                   type="button"
@@ -993,6 +1109,107 @@ export default function Home() {
                 >
                   Guardar Cambios
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL LISTA DE MARCADORES */}
+        {modalListaMarcadoresAbierto && (
+          <div
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-modal-in"
+            onClick={() => setModalListaMarcadoresAbierto(false)}
+          >
+            <div
+              className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl flex flex-col gap-4 max-h-[85vh] border border-[color:var(--color-line)] animate-fade-in-down"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-[var(--color-plum)]" />
+                  <h3 className="font-display text-xl font-bold text-[color:var(--color-ink)]">
+                    Mis Marcadores ({marcadores.length})
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setModalListaMarcadoresAbierto(false)}
+                  className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-3 overflow-y-auto pr-1 flex-1">
+                {marcadores.length === 0 ? (
+                  <p className="text-center text-gray-500 py-8 font-caveat text-lg">
+                    Aún no has colocado marcadores en el mapa.
+                  </p>
+                ) : (
+                  marcadores.map((m) => {
+                    const albumEnlazado = todosLosRecuerdos.find((r) => r.id === m.albumId);
+                    return (
+                      <div
+                        key={m.id}
+                        className="flex items-center justify-between p-3.5 rounded-2xl bg-gray-50 border border-gray-100 hover:border-gray-200 transition-all gap-3"
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div
+                            className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center shadow-sm border-2 border-white"
+                            style={{ backgroundColor: m.color }}
+                          />
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-bold text-sm text-[color:var(--color-ink)] truncate">
+                              {m.etiqueta || "Marcador sin nombre"}
+                            </span>
+                            <span className="text-xs text-[color:var(--color-ink-soft)] capitalize">
+                              {m.pais || "Mundo"} ({m.nivelOrigen})
+                            </span>
+                            {albumEnlazado && (
+                              <span className="text-xs text-[color:var(--color-plum)] font-caveat text-sm font-semibold truncate flex items-center gap-1">
+                                📖 {albumEnlazado.titulo}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {albumEnlazado && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setModalListaMarcadoresAbierto(false);
+                                setAlbumAbierto(albumEnlazado);
+                              }}
+                              className="px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-purple-50 text-[var(--color-plum)] hover:bg-purple-100 transition-colors"
+                              title="Ver Álbum"
+                            >
+                              Ver Álbum
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              setModalListaMarcadoresAbierto(false);
+                              abrirEdicionMarcador(m, e);
+                            }}
+                            className="w-8 h-8 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors text-xs"
+                            title="Editar"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => eliminarMarcador(m.id)}
+                            className="w-8 h-8 rounded-xl bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100 transition-colors text-xs"
+                            title="Eliminar"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>

@@ -27,4 +27,5 @@ model MarcadorMapa {
   etiqueta    String?
   nivelOrigen String
   pais        String
+  albumId     String?
 }
